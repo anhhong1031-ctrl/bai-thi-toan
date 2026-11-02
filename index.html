@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bé Vui Học Toán - Ôn Tập Trực Tuyến</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Quicksand & Be Vietnam Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800;900&family=Quicksand:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', 'Be Vietnam Pro', sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #f0fdf4 100%);
+      user-select: none;
+    }
+    .math-font {
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12), 0 8px 10px -6px rgba(59, 130, 246, 0.08);
+    }
+    .math-input {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      text-align: center;
+      font-weight: 800;
+      border: 2.5px dashed #93c5fd;
+      background-color: #ffffff;
+      transition: all 0.2s ease-in-out;
+      outline: none;
+    }
+    .math-input:focus {
+      border: 2.5px solid #3b82f6;
+      background-color: #eff6ff;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+      transform: scale(1.06);
+    }
+    .status-correct {
+      border: 2.5px solid #22c55e !important;
+      background-color: #dcfce7 !important;
+      color: #15803d !important;
+    }
+    .status-wrong {
+      border: 2.5px solid #ef4444 !important;
+      background-color: #fee2e2 !important;
+      color: #b91c1c !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+  <!-- Header: Cố định thông tin chơi online, KHÔNG CÓ NÚT TẢI VỀ -->
+  <header class="bg-white/95 backdrop-blur-md shadow-sm border-b border-blue-100 sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md text-xl">
+          <i class="fa-solid fa-shapes"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-blue-600 tracking-wide">Bé Vui Học Toán</h1>
+          <p class="text-xs text-slate-500 font-bold hidden sm:block">Trò chơi toán tương tác trực tuyến lớp 1</p>
+        </div>
+      </div>
+
+      <!-- Đồng hồ bấm giờ (Chỉ hiển thị khi đang làm bài) -->
+      <div id="liveTimerBox" class="hidden items-center gap-2 bg-amber-50 border-2 border-amber-300 px-4 py-1.5 rounded-2xl text-amber-700 font-black shadow-sm">
+        <i class="fa-solid fa-stopwatch animate-pulse text-amber-500 text-lg"></i>
+        <span id="liveTimerDisplay" class="font-mono text-base sm:text-lg">00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Vùng nội dung chính -->
+  <main class="max-w-5xl mx-auto px-3 py-6 w-full flex-grow">
+
+    <!-- 1. MÀN HÌNH ĐĂNG KÝ BẮT ĐẦU -->
+    <section id="startSection" class="max-w-lg mx-auto bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-blue-100 my-6 text-center">
+      <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
+        <i class="fa-solid fa-pencil"></i>
+      </div>
+      <h2 class="text-2xl font-black text-slate-800 mb-1">Thử Tài Toán Học Lớp 1</h2>
+      <p class="text-slate-500 text-sm font-semibold mb-6">Em hãy nhập đầy đủ họ tên và lớp để bắt đầu tính giờ làm bài trực tuyến nhé!</p>
+
+      <form onsubmit="event.preventDefault(); startOnlineQuiz();" class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Họ và tên của em <span class="text-rose-500">*</span></label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-base">
+              <i class="fa-solid fa-child-reaching"></i>
+            </span>
+            <input type="text" id="inputStudentName" required placeholder="Ví dụ: Nguyễn Minh Khang"
+                   class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none text-slate-700 font-bold text-base">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Lớp của em <span class="text-rose-500">*</span></label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-base">
+              <i class="fa-solid fa-school"></i>
+            </span>
+            <input type="text" id="inputStudentClass" required placeholder="Ví dụ: 1A2"
+                   class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none text-slate-700 font-bold text-base">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 hover:opacity-95 active:scale-[0.98] text-white font-black py-4 px-6 rounded-2xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-3 text-lg mt-4">
+          <span>BẮT ĐẦU LÀM BÀI</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-center gap-4 font-semibold">
+        <span><i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>Hệ thống tự động chấm</span>
+        <span><i class="fa-solid fa-eye-slash text-amber-500 mr-1"></i>Không hiển thị trước đáp án</span>
+      </div>
+    </section>
+
+    <!-- 2. KHU VỰC LÀM BÀI TRỰC TUYẾN -->
+    <section id="quizSection" class="hidden space-y-6">
+
+      <!-- Thông tin học sinh đang làm bài -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 sm:p-5 rounded-3xl shadow-lg flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold">
+            🌟
+          </div>
+          <div>
+            <div class="text-xs text-blue-200 font-bold uppercase tracking-wider">Học sinh đang thi</div>
+            <div class="text-lg sm:text-xl font-black" id="badgeStudentInfo">Em: ...</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-2xl border border-white/20">
+          <span class="text-xs uppercase font-bold text-blue-200">Thời gian làm:</span>
+          <span id="bannerTimer" class="font-black text-amber-300 font-mono text-lg">00:00</span>
+        </div>
+      </div>
+
+      <!-- PHẦN 1: Điền số thích hợp -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl card-shadow border border-blue-50">
+        <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-black text-blue-700 flex items-center gap-2">
+            <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl inline-flex items-center justify-center text-sm font-black">1</span>
+            Điền số thích hợp (&gt;, &lt;, =)
+          </h3>
+          <span class="text-xs bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-full">12 câu</span>
+        </div>
+        <div id="part1Container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      </div>
+
+      <!-- PHẦN 2: Tính -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl card-shadow border border-amber-50">
+        <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-black text-amber-700 flex items-center gap-2">
+            <span class="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl inline-flex items-center justify-center text-sm font-black">2</span>
+            Tính (Tính nhẩm và điền kết quả)
+          </h3>
+          <span class="text-xs bg-amber-50 text-amber-700 font-bold px-3 py-1 rounded-full">12 câu</span>
+        </div>
+        <div id="part2Container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      </div>
+
+      <!-- PHẦN 3: Điền dấu -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl card-shadow border border-emerald-50">
+        <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-black text-emerald-700 flex items-center gap-2">
+            <span class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl inline-flex items-center justify-center text-sm font-black">3</span>
+            Điền dấu ( &lt; , &gt; , = )
+          </h3>
+          <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-3 py-1 rounded-full">12 câu</span>
+        </div>
+        <div id="part3Container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      </div>
+
+      <!-- PHẦN 4: Xếp giảm dần -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl card-shadow border border-purple-50">
+        <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-black text-purple-700 flex items-center gap-2">
+            <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-xl inline-flex items-center justify-center text-sm font-black">4</span>
+            Xếp giảm dần
+          </h3>
+          <span class="text-xs bg-purple-50 text-purple-700 font-bold px-3 py-1 rounded-full">12 câu</span>
+        </div>
+        <div id="part4Container" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- PHẦN 5: Số? -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl card-shadow border border-rose-50">
+        <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-black text-rose-700 flex items-center gap-2">
+            <span class="w-8 h-8 bg-rose-100 text-rose-600 rounded-xl inline-flex items-center justify-center text-sm font-black">5</span>
+            Số?
+          </h3>
+          <span class="text-xs bg-rose-50 text-rose-700 font-bold px-3 py-1 rounded-full">24 câu</span>
+        </div>
+        <div id="part5Container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      </div>
+
+      <!-- Nút Nộp Bài Cuối Trang -->
+      <div class="bg-white p-4 rounded-3xl card-shadow border border-slate-100 flex flex-wrap items-center justify-between gap-4 sticky bottom-4 z-30">
+        <div class="flex items-center gap-2 text-slate-600 text-sm font-bold">
+          <i class="fa-solid fa-circle-question text-blue-500 text-base"></i>
+          <span>Tổng số câu hỏi: <strong class="text-blue-600 text-base">72 câu</strong></span>
+        </div>
+        <button onclick="checkUnfinishedAndSubmit()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-95 text-white font-black text-base px-8 py-3.5 rounded-2xl shadow-lg shadow-green-200 transition flex items-center justify-center gap-2.5">
+          <i class="fa-solid fa-flag-checkered text-lg"></i>
+          <span>NỘP BÀI CHẤM ĐIỂM</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- 3. MÀN HÌNH TỔNG KẾT KẾT QUẢ & XEM LẠI BÀI LÀM -->
+    <section id="resultSection" class="hidden space-y-6">
+
+      <!-- Bảng Vinh Danh & Tổng Kết -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-blue-100 text-center relative overflow-hidden">
+        <div id="resultIcon" class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 bg-amber-100 text-amber-600">
+          🏆
+        </div>
+        <h2 id="resultEvaluation" class="text-2xl sm:text-3xl font-black text-slate-800 mb-1">Xuất Sắc!</h2>
+        <p id="resultEncouragement" class="text-slate-500 font-bold text-sm mb-6">Em đã hoàn thành xuất sắc bài ôn tập Toán lớp 1.</p>
+
+        <!-- Thẻ thống kê kết quả -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-2xl mx-auto mb-6">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div class="text-xs font-bold text-slate-400 uppercase">Học sinh</div>
+            <div id="resName" class="text-base font-black text-slate-800 mt-1 truncate">---</div>
+            <div id="resClass" class="text-xs text-slate-500 font-bold">Lớp: ---</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+            <div class="text-xs font-bold text-blue-500 uppercase">Thời gian làm</div>
+            <div id="resTime" class="text-xl font-black text-blue-700 mt-1">00:00</div>
+            <div class="text-xs text-blue-400 font-bold">tổng thời gian</div>
+          </div>
+          <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <div class="text-xs font-bold text-emerald-600 uppercase">Số câu đúng</div>
+            <div class="text-xl font-black text-emerald-700 mt-1"><span id="resCorrect">0</span>/72</div>
+            <div id="resPercent" class="text-xs text-emerald-500 font-bold">0%</div>
+          </div>
+          <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+            <div class="text-xs font-bold text-amber-600 uppercase">Điểm số (Thang 10)</div>
+            <div id="resScore10" class="text-2xl font-black text-amber-600 mt-1">0.0</div>
+            <div class="text-xs text-amber-500 font-bold">Điểm quy đổi</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+          <button onclick="restartOnlineQuiz()" class="px-7 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-base rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Làm Lại Từ Đầu</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Xem lại chi tiết từng câu hỏi (Xanh = Đúng, Đỏ = Sai) -->
+      <div class="bg-white rounded-3xl p-5 sm:p-7 card-shadow border border-slate-100">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6 flex-wrap gap-2">
+          <div>
+            <h3 class="text-xl font-black text-slate-800">Chi Tiết Từng Câu Hỏi</h3>
+            <p class="text-xs text-slate-400 font-bold">Ô xanh là câu em làm đúng, ô đỏ là câu chưa chính xác kèm đáp án đúng.</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-bold">
+            <span class="flex items-center gap-1.5 text-emerald-600"><span class="w-3.5 h-3.5 rounded-full bg-emerald-500 inline-block"></span> Làm đúng</span>
+            <span class="flex items-center gap-1.5 text-rose-600"><span class="w-3.5 h-3.5 rounded-full bg-rose-500 inline-block"></span> Cần sửa</span>
+          </div>
+        </div>
+
+        <div id="reviewDetailsBox" class="space-y-6"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal Xác Nhận Nộp Bài (Không dùng alert/confirm của browser) -->
+  <div id="submitModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center card-shadow border border-slate-100">
+      <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
+        <i class="fa-solid fa-circle-question"></i>
+      </div>
+      <h3 class="text-lg font-black text-slate-800 mb-1.5">Xác nhận nộp bài?</h3>
+      <p id="modalWarningText" class="text-xs text-slate-500 font-semibold mb-6">Em có chắc chắn muốn nộp bài để xem điểm và kết quả không?</p>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSubmitModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Làm tiếp</button>
+        <button onclick="finalizeOnlineQuiz()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition">Nộp ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer thuần chơi online -->
+  <footer class="bg-white/80 border-t border-blue-50 py-3.5 text-center text-xs text-slate-400 font-semibold">
+    <p>Trò chơi ôn tập Toán lớp 1 - Chơi trực tiếp trên trình duyệt</p>
+  </footer>
+
+  <!-- Dữ liệu bài tập & Logic chương trình -->
+  <script>
+    /* Dữ liệu Phần 1: Điền số thích hợp (12 câu) */
+    const DATA_P1 = [
+      { id: "p1_1", text: "9 - 4 - 1 >", op: ">", lhs: 4, validMsg: "nhỏ hơn 4 (0, 1, 2, 3)" },
+      { id: "p1_2", text: "9 - 3 - 2 >", op: ">", lhs: 4, validMsg: "nhỏ hơn 4 (0, 1, 2, 3)" },
+      { id: "p1_3", text: "3 + 2 - 2 >", op: ">", lhs: 3, validMsg: "nhỏ hơn 3 (0, 1, 2)" },
+      { id: "p1_4", text: "4 + 1 - 3 >", op: ">", lhs: 2, validMsg: "nhỏ hơn 2 (0, 1)" },
+      { id: "p1_5", text: "10 - 8 - 1 >", op: ">", lhs: 1, validMsg: "nhỏ hơn 1 (số 0)" },
+      { id: "p1_6", text: "7 - 5 - 1 <", op: "<", lhs: 1, validMsg: "lớn hơn 1 (ví dụ: 2, 3...)" },
+      { id: "p1_7", text: "10 - 6 - 2 =", op: "=", lhs: 2, ans: 2, validMsg: "2" },
+      { id: "p1_8", text: "6 - 3 - 1 >", op: ">", lhs: 2, validMsg: "nhỏ hơn 2 (0, 1)" },
+      { id: "p1_9", text: "2 - 1 + 8 <", op: "<", lhs: 9, validMsg: "lớn hơn 9 (ví dụ: 10, 11...)" },
+      { id: "p1_10", text: "9 - 3 - 5 <", op: "<", lhs: 1, validMsg: "lớn hơn 1 (ví dụ: 2, 3...)" },
+      { id: "p1_11", text: "4 + 3 - 6 <", op: "<", lhs: 1, validMsg: "lớn hơn 1 (ví dụ: 2, 3...)" },
+      { id: "p1_12", text: "10 - 2 - 4 =", op: "=", lhs: 4, ans: 4, validMsg: "4" }
+    ];
+
+    /* Dữ liệu Phần 2: Tính (12 câu) */
+    const DATA_P2 = [
+      { id: "p2_1", text: "8 - 6 - 1 =", ans: 1 },
+      { id: "p2_2", text: "8 - 3 - 4 =", ans: 1 },
+      { id: "p2_3", text: "4 - 1 - 2 =", ans: 1 },
+      { id: "p2_4", text: "5 + 1 + 3 =", ans: 9 },
+      { id: "p2_5", text: "6 + 2 - 7 =", ans: 1 },
+      { id: "p2_6", text: "5 + 1 + 1 =", ans: 7 },
+      { id: "p2_7", text: "6 + 4 - 5 =", ans: 5 },
+      { id: "p2_8", text: "1 + 9 - 3 =", ans: 7 },
+      { id: "p2_9", text: "1 + 4 + 4 =", ans: 9 },
+      { id: "p2_10", text: "5 + 3 + 1 =", ans: 9 },
+      { id: "p2_11", text: "8 + 1 - 4 =", ans: 5 },
+      { id: "p2_12", text: "7 + 2 - 8 =", ans: 1 }
+    ];
+
+    /* Dữ liệu Phần 3: Điền dấu (12 câu) */
+    const DATA_P3 = [
+      { id: "p3_1", left: 3, rightExpr: "4 - 3 + 9", rightVal: 10, ans: "<" },
+      { id: "p3_2", left: 5, rightExpr: "6 - 1 + 4", rightVal: 9, ans: "<" },
+      { id: "p3_3", left: 5, rightExpr: "3 + 5 - 5", rightVal: 3, ans: ">" },
+      { id: "p3_4", left: 9, rightExpr: "7 - 1 + 3", rightVal: 9, ans: "=" },
+      { id: "p3_5", left: 2, rightExpr: "8 + 1 - 8", rightVal: 1, ans: ">" },
+      { id: "p3_6", left: 4, rightExpr: "9 - 4 + 4", rightVal: 9, ans: "<" },
+      { id: "p3_7", left: 5, rightExpr: "4 + 1 - 2", rightVal: 3, ans: ">" },
+      { id: "p3_8", left: 5, rightExpr: "1 + 9", rightVal: 10, ans: "<" },
+      { id: "p3_9", left: 2, rightExpr: "3 + 2", rightVal: 5, ans: "<" },
+      { id: "p3_10", left: 4, rightExpr: "6 - 1", rightVal: 5, ans: "<" },
+      { id: "p3_11", left: 5, rightExpr: "8 - 1", rightVal: 7, ans: "<" },
+      { id: "p3_12", left: 8, rightExpr: "1 + 7", rightVal: 8, ans: "=" }
+    ];
+
+    /* Dữ liệu Phần 4: Xếp giảm dần (12 câu) */
+    const DATA_P4 = [
+      { id: "p4_1", nums: [1, 7, 10, 8], ans: [10, 8, 7, 1] },
+      { id: "p4_2", nums: [1, 9, 10, 3], ans: [10, 9, 3, 1] },
+      { id: "p4_3", nums: [2, 3, 5, 1], ans: [5, 3, 2, 1] },
+      { id: "p4_4", nums: [1, 7, 8, 10], ans: [10, 8, 7, 1] },
+      { id: "p4_5", nums: [10, 7, 6, 1], ans: [10, 7, 6, 1] },
+      { id: "p4_6", nums: [8, 10, 1, 9], ans: [10, 9, 8, 1] },
+      { id: "p4_7", nums: [6, 2, 3, 9], ans: [9, 6, 3, 2] },
+      { id: "p4_8", nums: [5, 3, 8, 1], ans: [8, 5, 3, 1] },
+      { id: "p4_9", nums: [10, 5, 2, 8], ans: [10, 8, 5, 2] },
+      { id: "p4_10", nums: [3, 4, 10, 5], ans: [10, 5, 4, 3] },
+      { id: "p4_11", nums: [9, 4, 3, 8], ans: [9, 8, 4, 3] },
+      { id: "p4_12", nums: [6, 5, 1, 8], ans: [8, 6, 5, 1] }
+    ];
+
+    /* Dữ liệu Phần 5: Số? (24 câu gồm 2 cột từ hình ảnh) */
+    const DATA_P5 = [
+      // Cột 1
+      { id: "p5_1", prefix: "7 thêm 1 được", suffix: "", ans: 8 },
+      { id: "p5_2", prefix: "3 tách", suffix: "còn 1", ans: 2 },
+      { id: "p5_3", prefix: "2 gồm 1 và", suffix: "", ans: 1 },
+      { id: "p5_4", prefix: "", suffix: "gồm 6 và 4", ans: 10 },
+      { id: "p5_5", prefix: "", suffix: "gồm 6 và 2", ans: 8 },
+      { id: "p5_6", prefix: "", suffix: "tách 4 còn 4", ans: 8 },
+      { id: "p5_7", prefix: "9 tách", suffix: "còn 5", ans: 4 },
+      { id: "p5_8", prefix: "1 thêm", suffix: "được 6", ans: 5 },
+      { id: "p5_9", prefix: "10 tách 7 còn", suffix: "", ans: 3 },
+      { id: "p5_10", prefix: "4 tách 1 còn", suffix: "", ans: 3 },
+      { id: "p5_11", prefix: "3 thêm", suffix: "được 4", ans: 1 },
+      { id: "p5_12", prefix: "2 tách", suffix: "còn 1", ans: 1 },
+      // Cột 2
+      { id: "p5_13", prefix: "8 thêm", suffix: "được 9", ans: 1 },
+      { id: "p5_14", prefix: "1 thêm", suffix: "được 5", ans: 4 },
+      { id: "p5_15", prefix: "", suffix: "gồm 7 và 3", ans: 10 },
+      { id: "p5_16", prefix: "3 thêm 4 được", suffix: "", ans: 7 },
+      { id: "p5_17", prefix: "", suffix: "gồm 4 và 3", ans: 7 },
+      { id: "p5_18", prefix: "4 thêm 3 được", suffix: "", ans: 7 },
+      { id: "p5_19", prefix: "5 thêm 1 được", suffix: "", ans: 6 },
+      { id: "p5_20", prefix: "", suffix: "gồm 8 và 2", ans: 10 },
+      { id: "p5_21", prefix: "5 gồm", suffix: "và 4", ans: 1 },
+      { id: "p5_22", prefix: "", suffix: "gồm 8 và 2", ans: 10 },
+      { id: "p5_23", prefix: "4 tách 2 còn", suffix: "", ans: 2 },
+      { id: "p5_24", prefix: "2 gồm", suffix: "và 1", ans: 1 }
+    ];
+
+    /* Biến toàn cục quản lý trạng thái */
+    let studentName = "";
+    let studentClass = "";
+    let timerInterval = null;
+    let totalSeconds = 0;
+
+    /* Render bài tập */
+    function renderAllQuestions() {
+      // 1. Render Phần 1
+      document.getElementById("part1Container").innerHTML = DATA_P1.map((q, idx) => `
+        <div class="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100 flex items-center justify-between">
+          <span class="text-sm font-extrabold text-slate-700 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-blue-200 text-blue-800 text-xs inline-flex items-center justify-center">${idx + 1}</span>
+            <span>${q.text}</span>
+          </span>
+          <input type="number" id="${q.id}" placeholder="..." class="math-input w-16 h-10 rounded-xl text-base" />
+        </div>
+      `).join("");
+
+      // 2. Render Phần 2
+      document.getElementById("part2Container").innerHTML = DATA_P2.map((q, idx) => `
+        <div class="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-100 flex items-center justify-between">
+          <span class="text-sm font-extrabold text-slate-700 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-amber-200 text-amber-800 text-xs inline-flex items-center justify-center">${idx + 1}</span>
+            <span>${q.text}</span>
+          </span>
+          <input type="number" id="${q.id}" placeholder="..." class="math-input w-16 h-10 rounded-xl text-base" />
+        </div>
+      `).join("");
+
+      // 3. Render Phần 3
+      document.getElementById("part3Container").innerHTML = DATA_P3.map((q, idx) => `
+        <div class="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100 flex items-center justify-between">
+          <span class="text-sm font-extrabold text-slate-700 flex items-center gap-2 flex-grow">
+            <span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-800 text-xs inline-flex items-center justify-center flex-shrink-0">${idx + 1}</span>
+            <span>${q.left}</span>
+            <input type="text" maxlength="1" id="${q.id}" placeholder="?" class="math-input w-12 h-10 rounded-xl text-lg font-black text-blue-600 uppercase" />
+            <span>${q.rightExpr}</span>
+          </span>
+        </div>
+      `).join("");
+
+      // 4. Render Phần 4
+      document.getElementById("part4Container").innerHTML = DATA_P4.map((q, idx) => `
+        <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-purple-600 uppercase">Dãy ${idx + 1}</span>
+            <span class="font-extrabold text-slate-800 text-sm tracking-wider bg-white px-2.5 py-1 rounded-xl border border-purple-100">${q.nums.join(" ; ")}</span>
+          </div>
+          <div class="flex items-center gap-1.5 justify-end">
+            <span class="text-xs font-bold text-slate-400 mr-1">Xếp:</span>
+            <input type="number" id="${q.id}_0" class="math-input w-11 h-9 rounded-lg text-sm" placeholder="1" />
+            <span class="text-slate-400 font-bold">&gt;</span>
+            <input type="number" id="${q.id}_1" class="math-input w-11 h-9 rounded-lg text-sm" placeholder="2" />
+            <span class="text-slate-400 font-bold">&gt;</span>
+            <input type="number" id="${q.id}_2" class="math-input w-11 h-9 rounded-lg text-sm" placeholder="3" />
+            <span class="text-slate-400 font-bold">&gt;</span>
+            <input type="number" id="${q.id}_3" class="math-input w-11 h-9 rounded-lg text-sm" placeholder="4" />
+          </div>
+        </div>
+      `).join("");
+
+      // 5. Render Phần 5
+      document.getElementById("part5Container").innerHTML = DATA_P5.map((q, idx) => `
+        <div class="bg-rose-50/50 p-3.5 rounded-2xl border border-rose-100 flex items-center justify-between gap-2">
+          <span class="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-grow">
+            <span class="w-6 h-6 rounded-full bg-rose-200 text-rose-800 text-xs inline-flex items-center justify-center flex-shrink-0 font-black">${idx + 1}</span>
+            <span>${q.prefix}</span>
+            ${q.prefix === "" ? `<input type="number" id="${q.id}" placeholder="..." class="math-input w-14 h-9 rounded-xl text-base mx-1" />` : ''}
+            <span>${q.suffix}</span>
+          </span>
+          ${q.prefix !== "" ? `<input type="number" id="${q.id}" placeholder="..." class="math-input w-14 h-9 rounded-xl text-base flex-shrink-0" />` : ''}
+        </div>
+      `).join("");
+    }
+
+    /* Bắt đầu làm bài */
+    function startOnlineQuiz() {
+      const name = document.getElementById("inputStudentName").value.trim();
+      const cls = document.getElementById("inputStudentClass").value.trim();
+      if (!name || !cls) return;
+
+      studentName = name;
+      studentClass = cls;
+
+      document.getElementById("badgeStudentInfo").innerText = `${studentName} - Lớp: ${studentClass}`;
+      document.getElementById("startSection").classList.add("hidden");
+      document.getElementById("quizSection").classList.remove("hidden");
+      document.getElementById("liveTimerBox").classList.remove("hidden");
+      document.getElementById("liveTimerBox").classList.add("flex");
+
+      renderAllQuestions();
+
+      // Bắt đầu đếm thời gian
+      totalSeconds = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        totalSeconds++;
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        document.getElementById("liveTimerDisplay").innerText = timeStr;
+        document.getElementById("bannerTimer").innerText = timeStr;
+      }, 1000);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* Kiểm tra các câu chưa điền & Mở Modal */
+    function checkUnfinishedAndSubmit() {
+      let emptyCount = 0;
+      // Kiểm tra sơ bộ các ô input
+      document.querySelectorAll("#quizSection input").forEach(inp => {
+        if (!inp.value.trim()) emptyCount++;
+      });
+
+      const warningText = document.getElementById("modalWarningText");
+      if (emptyCount > 0) {
+        warningText.innerHTML = `Em còn <strong class="text-rose-600">${emptyCount} ô chưa điền</strong>. Em có chắc chắn muốn nộp bài ngay bây giờ không?`;
+      } else {
+        warningText.innerHTML = `Em đã điền đầy đủ tất cả các câu hỏi! Bấm <strong>Nộp ngay</strong> để xem điểm số nhé!`;
+      }
+      document.getElementById("submitModal").classList.remove("hidden");
+    }
+
+    function closeSubmitModal() {
+      document.getElementById("submitModal").classList.add("hidden");
+    }
+
+    /* Chấm điểm và hiển thị kết quả */
+    function finalizeOnlineQuiz() {
+      closeSubmitModal();
+      clearInterval(timerInterval);
+
+      let correctCount = 0;
+      const totalQuestions = 72;
+
+      // 1. Chấm Phần 1 (12 câu)
+      let p1Html = "";
+      DATA_P1.forEach((q, idx) => {
+        const inp = document.getElementById(q.id);
+        const val = parseInt(inp ? inp.value.trim() : "", 10);
+        let ok = false;
+        if (!isNaN(val)) {
+          if (q.op === ">") ok = (q.lhs > val);
+          else if (q.op === "<") ok = (q.lhs < val);
+          else if (q.op === "=") ok = (q.lhs === val);
+        }
+        if (ok) correctCount++;
+
+        p1Html += `
+          <div class="p-3 rounded-2xl border ${ok ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} text-xs">
+            <div class="font-black text-slate-700">${idx + 1}. ${q.text} <span class="${ok ? 'text-emerald-700' : 'text-rose-600 underline'}">${!isNaN(val) ? val : '(chưa điền)'}</span></div>
+            <div class="mt-1 flex items-center justify-between font-bold">
+              <span class="${ok ? 'text-emerald-600' : 'text-rose-600'}">${ok ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+              <span class="text-slate-500">Hợp lệ: <strong>${q.validMsg}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+
+      // 2. Chấm Phần 2 (12 câu)
+      let p2Html = "";
+      DATA_P2.forEach((q, idx) => {
+        const inp = document.getElementById(q.id);
+        const val = parseInt(inp ? inp.value.trim() : "", 10);
+        const ok = (!isNaN(val) && val === q.ans);
+        if (ok) correctCount++;
+
+        p2Html += `
+          <div class="p-3 rounded-2xl border ${ok ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} text-xs">
+            <div class="font-black text-slate-700">${idx + 1}. ${q.text} <span class="${ok ? 'text-emerald-700' : 'text-rose-600 underline'}">${!isNaN(val) ? val : '...'}</span></div>
+            <div class="mt-1 flex items-center justify-between font-bold">
+              <span class="${ok ? 'text-emerald-600' : 'text-rose-600'}">${ok ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+              <span class="text-slate-500">Đáp án: <strong>${q.ans}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+
+      // 3. Chấm Phần 3 (12 câu)
+      let p3Html = "";
+      DATA_P3.forEach((q, idx) => {
+        const inp = document.getElementById(q.id);
+        const val = (inp ? inp.value.trim() : "").replace(/\s+/g, "");
+        const ok = (val === q.ans);
+        if (ok) correctCount++;
+
+        p3Html += `
+          <div class="p-3 rounded-2xl border ${ok ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} text-xs">
+            <div class="font-black text-slate-700">${idx + 1}. ${q.left} [ <span class="${ok ? 'text-emerald-700' : 'text-rose-600'}">${val || '?'}</span> ] ${q.rightExpr}</div>
+            <div class="mt-1 flex items-center justify-between font-bold">
+              <span class="${ok ? 'text-emerald-600' : 'text-rose-600'}">${ok ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+              <span class="text-slate-500">Dấu đúng: <strong>${q.ans}</strong> (${q.left} ${q.ans} ${q.rightVal})</span>
+            </div>
+          </div>
+        `;
+      });
+
+      // 4. Chấm Phần 4 (12 câu)
+      let p4Html = "";
+      DATA_P4.forEach((q, idx) => {
+        let isAllCorrect = true;
+        let userArr = [];
+        for (let i = 0; i < 4; i++) {
+          const inp = document.getElementById(`${q.id}_${i}`);
+          const v = inp ? parseInt(inp.value.trim(), 10) : NaN;
+          userArr.push(isNaN(v) ? '?' : v);
+          if (v !== q.ans[i]) isAllCorrect = false;
+        }
+        if (isAllCorrect) correctCount++;
+
+        p4Html += `
+          <div class="p-3 rounded-2xl border ${isAllCorrect ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} text-xs">
+            <div class="font-black text-slate-700">${idx + 1}. Ban đầu: ${q.nums.join(" ; ")}</div>
+            <div class="text-slate-600 mt-1">Em điền: <strong>${userArr.join(" > ")}</strong></div>
+            <div class="mt-1 flex items-center justify-between font-bold">
+              <span class="${isAllCorrect ? 'text-emerald-600' : 'text-rose-600'}">${isAllCorrect ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+              <span class="text-slate-500">Đúng là: <strong>${q.ans.join(" > ")}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+
+      // 5. Chấm Phần 5 (24 câu)
+      let p5Html = "";
+      DATA_P5.forEach((q, idx) => {
+        const inp = document.getElementById(q.id);
+        const val = parseInt(inp ? inp.value.trim() : "", 10);
+        const ok = (!isNaN(val) && val === q.ans);
+        if (ok) correctCount++;
+
+        const questionSentence = `${q.prefix} [ ${!isNaN(val) ? val : '...'} ] ${q.suffix}`.trim();
+        p5Html += `
+          <div class="p-3 rounded-2xl border ${ok ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} text-xs">
+            <div class="font-black text-slate-700">${idx + 1}. ${questionSentence}</div>
+            <div class="mt-1 flex items-center justify-between font-bold">
+              <span class="${ok ? 'text-emerald-600' : 'text-rose-600'}">${ok ? '✓ Chính xác' : '✗ Chưa đúng'}</span>
+              <span class="text-slate-500">Đáp án: <strong>${q.ans}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+
+      // Ẩn vùng làm bài, hiện màn hình kết quả
+      document.getElementById("quizSection").classList.add("hidden");
+      document.getElementById("liveTimerBox").classList.add("hidden");
+      document.getElementById("liveTimerBox").classList.remove("flex");
+      document.getElementById("resultSection").classList.remove("hidden");
+
+      // Tính điểm và phần trăm
+      const score10 = ((correctCount / totalQuestions) * 10).toFixed(1);
+      const percent = Math.round((correctCount / totalQuestions) * 100);
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      // Điền thông số
+      document.getElementById("resName").innerText = studentName;
+      document.getElementById("resClass").innerText = `Lớp: ${studentClass}`;
+      document.getElementById("resTime").innerText = formattedTime;
+      document.getElementById("resCorrect").innerText = correctCount;
+      document.getElementById("resPercent").innerText = `${percent}% chính xác`;
+      document.getElementById("resScore10").innerText = score10;
+
+      // Nhận xét khen ngợi phù hợp lứa tuổi
+      const evalTitle = document.getElementById("resultEvaluation");
+      const evalDesc = document.getElementById("resultEncouragement");
+      const icon = document.getElementById("resultIcon");
+
+      if (percent >= 90) {
+        evalTitle.innerText = "🌟 Xuất Sắc! Thần Đồng Toán Học!";
+        evalDesc.innerText = `Chúc mừng em ${studentName}, em đã làm bài siêu chuẩn xác!`;
+        icon.innerText = "🏆";
+        icon.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 bg-amber-100 text-amber-600";
+        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch (e) {}
+      } else if (percent >= 75) {
+        evalTitle.innerText = "🎉 Rất Giỏi! Làm Bài Rất Tốt!";
+        evalDesc.innerText = `Khen ngợi em ${studentName} đã nắm rất chắc các phép tính và cấu tạo số!`;
+        icon.innerText = "⭐";
+        icon.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 bg-emerald-100 text-emerald-600";
+      } else if (percent >= 50) {
+        evalTitle.innerText = "👍 Em Đã Cố Gắng Rất Nhiều!";
+        evalDesc.innerText = `Em hãy xem lại các câu màu đỏ phía dưới để nhớ bài hơn nhé!`;
+        icon.innerText = "📚";
+        icon.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 bg-blue-100 text-blue-600";
+      } else {
+        evalTitle.innerText = "💪 Cố Gắng Luyện Tập Thêm Nhé!";
+        evalDesc.innerText = `Đừng nản lòng nhé ${studentName}, em hãy bấm 'Làm lại từ đầu' để thử lại!`;
+        icon.innerText = "💡";
+        icon.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 bg-rose-100 text-rose-600";
+      }
+
+      // Đổ danh sách câu hỏi vào bảng xem lại
+      document.getElementById("reviewDetailsBox").innerHTML = `
+        <div>
+          <h4 class="font-black text-blue-700 text-sm mb-3">Phần 1: Điền số thích hợp</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">${p1Html}</div>
+        </div>
+        <div>
+          <h4 class="font-black text-amber-700 text-sm mb-3">Phần 2: Tính</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">${p2Html}</div>
+        </div>
+        <div>
+          <h4 class="font-black text-emerald-700 text-sm mb-3">Phần 3: Điền dấu</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">${p3Html}</div>
+        </div>
+        <div>
+          <h4 class="font-black text-purple-700 text-sm mb-3">Phần 4: Xếp giảm dần</h4>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-2.5">${p4Html}</div>
+        </div>
+        <div>
+          <h4 class="font-black text-rose-700 text-sm mb-3">Phần 5: Số?</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">${p5Html}</div>
+        </div>
+      `;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* Khởi động lại lượt chơi mới */
+    function restartOnlineQuiz() {
+      document.getElementById("resultSection").classList.add("hidden");
+      document.getElementById("startSection").classList.remove("hidden");
+      document.getElementById("inputStudentName").value = "";
+      document.getElementById("inputStudentClass").value = "";
+      document.getElementById("liveTimerDisplay").innerText = "00:00";
+      document.getElementById("bannerTimer").innerText = "00:00";
+      totalSeconds = 0;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
